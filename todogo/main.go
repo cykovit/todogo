@@ -35,10 +35,10 @@ func main() {
 		}
 		fmt.Print("> ")
 	}
-	fmt.Println("Exiting todogo...")
+	fmt.Println("Exiting the application...")
 }
 
-// handleInput processes the user's command and modifies the TODO list accordingly
+// process the user's command and modifies the TODO list accordingly
 func handleInput(input string, data *[]TODOs, counter *int) bool {
 	split := strings.SplitN(input, " ", 2)
 	cmd := split[0]
@@ -54,7 +54,7 @@ func handleInput(input string, data *[]TODOs, counter *int) bool {
 		createTODO(description, data, counter)
 	case "remove":
 		if len(split) < 2 {
-			fmt.Println("Error: Missing ID for remove command")
+			fmt.Println("Error: Missing IDs for remove command")
 			return false
 		}
 		removeTODO(split[1], data)
@@ -96,21 +96,30 @@ func createTODO(description string, data *[]TODOs, counter *int) {
 	fmt.Println("Created TODO items")
 }
 
-// remove the TODO item with the specified ID from the list
-func removeTODO(idStr string, data *[]TODOs) {
-	id, err := strconv.Atoi(idStr) // convert the ID string to an integer
-	if err != nil {
-		fmt.Println("Error: Invalid ID")
-		return
+// remove TODO items with the specified IDs from the list
+func removeTODO(ids string, data *[]TODOs) {
+	idStrs := strings.Split(ids, ",")
+	idsToRemove := make(map[int]struct{})
+	for _, idStr := range idStrs {
+		idStr = strings.TrimSpace(idStr)
+		if idStr == "" {
+			continue
+		}
+		id, err := strconv.Atoi(idStr) // convert the ID string to an integer
+		if err != nil {
+			fmt.Println("Error: Invalid ID", idStr)
+			continue
+		}
+		idsToRemove[id] = struct{}{}
 	}
-	for i, todo := range *data {
-		if todo.Id == id {
-			*data = append((*data)[:i], (*data)[i+1:]...)
-			fmt.Println("Removed TODO item")
-			return
+	newData := make([]TODOs, 0)
+	for _, todo := range *data {
+		if _, exists := idsToRemove[todo.Id]; !exists {
+			newData = append(newData, todo)
 		}
 	}
-	fmt.Println("TODO item not found")
+	*data = newData
+	fmt.Println("Removed TODO items")
 }
 
 // display all TODO items in the list
